@@ -1,0 +1,2 @@
+- Complete request parsing implementation
+- MVP of responding to GET request for localhost/index.html or similar

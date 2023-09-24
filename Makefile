@@ -1,17 +1,23 @@
+# Variables
 CC = gcc
 CFLAGS = -Isrc/inc
-SOURCES = $(wildcard src/*.c)
-OBJECTS = $(patsubst src/%.c, build/%.o, $(SOURCES))
-EXECUTABLE = hnet
+SRC_DIR = src
+BUILD_DIR = build
+SOURCES = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c)
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
-all: $(EXECUTABLE)
+# Targets
+all: hnet
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXECUTABLE)
+hnet: $(OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@
 
-build/%.o: src/%.c
-	mkdir -p build
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf build $(EXECUTABLE)
+	rm -rf $(BUILD_DIR) hnet
+
+.PHONY: all clean
+

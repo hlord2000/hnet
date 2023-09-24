@@ -3,6 +3,6 @@
 
 typedef enum {
     HTTP_ONE_POINT_ONE,
-} http_version_t
+} http_version_t;
 
 #endif
