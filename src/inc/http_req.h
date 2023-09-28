@@ -12,8 +12,6 @@ typedef enum {
     NONE,
 } http_req_method_t;
 
-#define HTTP_REQ_ERROR -1
-
 typedef struct {
     http_req_method_t request_method;
 

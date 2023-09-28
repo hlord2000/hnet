@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -46,12 +47,6 @@ static int validate_path(char *path, size_t data_length) {
         }
     }
     
-    char path_str[512];
-    strncpy(path_str, "./www", data_length);
-    strncat(path_str, path, data_length);
-    if (access(path_str, F_OK) == -1) {
-        return -1;
-    }
     return 0;
 }
 
@@ -75,8 +70,7 @@ static int validate_request_line(char *request_line, size_t data_length, http_re
         return -1;
     }
 
-    if (data_length == 0) {
-        return -1;
+    if (data_length == 0) { return -1;
     }
     
     char *request_line_ptr;
@@ -85,9 +79,13 @@ static int validate_request_line(char *request_line, size_t data_length, http_re
     if (method == NULL) {
         return -1;
     }
+    http_req_method_t req_method = validate_method(method, strlen(method));
 
-    if (validate_method(method, strlen(method)) == NONE) {
+    if (req_method == NONE) {
         return -1;
+    }
+    else {
+        http_req->request_method = req_method;
     }
     
     char *path = strtok_r(NULL, " ", &request_line_ptr);
@@ -99,6 +97,14 @@ static int validate_request_line(char *request_line, size_t data_length, http_re
     if (validate_path(path, strlen(path))) {
         return -1;
     }
+    else {
+        server_path_t *server_path = malloc(sizeof(server_path_t));
+
+        server_path->path = path;
+        server_path->path_length = strlen(path);
+
+        http_req->server_path = *server_path;
+    }
 
     char *http_version = strtok_r(NULL, " ", &request_line_ptr);
 
@@ -109,30 +115,67 @@ static int validate_request_line(char *request_line, size_t data_length, http_re
     if (validate_version(http_version, strlen(http_version))) {
         return -1;
     }
+    else {
+        http_req->http_version = HTTP_ONE_POINT_ONE;
+    }
 
     return 0;
 }
+
+static int validate_headers(char *request_line, size_t data_length, http_req_t *http_req) {
+    if (request_line == NULL) {
+        return -1;
+    } 
+
+    if (data_length == 0) {
+        return -1;
+    }
+    
+    char *request_line_end = strstr(request_line, "\r\n"); 
+    if (request_line_end == NULL) {
+        return -1;
+    }
+    memset(request_line_end, '\0', 2);
+
+}
+
 
 // Should either return a reference to an http_req_t or an error
 http_req_t * validate_request(char *data_received, size_t data_length) {
     
     int err;
     if (data_received == NULL) {
-        return HTTP_REQ_ERROR;
+        return NULL;
     }
 
     if (data_length == 0) {
-        return HTTP_REQ_ERROR;
+        return NULL;
     }
    
-    char *header_ptr;
-    char *request_line = strtok_r(data_received, "\r\n\r\n", &header_ptr);
+    char *request_header_end = strstr(data_received, "\r\n\r\n"); 
+    if (request_header_end == NULL) {
+        return NULL;
+    }
+    memset(request_header_end, '\0', 4);
+    char *request_body = request_header_end + 4;
     
-    http_req_t *http_req;
+    http_req_t *http_req = malloc(sizeof(http_req_t)); 
 
     err = validate_request_line(data_received, data_length, http_req);
     if (err) {
-        return HTTP_REQ_ERROR;
+        return NULL;
     }
-    return ;
+
+    err = validate_headers(data_received, data_length, http_req);
+    if (err) {
+        return NULL;
+    }
+
+    err = validate_body(data_received, data_length, http_req);
+    if (err) {
+        return NULL;
+    }
+#endif
+    
+    return http_req;
 };

@@ -3,16 +3,15 @@
 #include <unistd.h>
 #include <http_req.h>
 
-char example_request[] = "GET /api/v1/users/1 HTTP/1.1\r\n" \
-                        "Host: example.com\r\n" \
-                        "Authorization: Bearer YOUR_ACCESS_TOKEN\r\n" \
-                        "User-Agent: MyClient/1.0.0\r\n" \
-                        "Accept: application/json\r\n";
+char example_request[] = "GET /index.html HTTP/1.1\r\nHost: example.com\r\nAuthorization: Bearer YOUR_ACCESS_TOKEN\r\nUser-Agent: MyClient/1.0.0\r\nAccept: application/json\r\n\r\n<html><body><h1>Hello, World!</h1></body></html>";
 
 int main(void) {
-    int err;
-    size_t data_length = sizeof(example_request);
-    err = validate_request(example_request, data_length);
-    printf("err: %d\n", err);
+    http_req_t *req;
+    req = validate_request(example_request, sizeof(example_request));
+    if (req == NULL) {
+        printf("Request is invalid\n");
+        return -1;
+    }
+
     return 0;
 }
