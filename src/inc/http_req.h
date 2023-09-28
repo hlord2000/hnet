@@ -17,5 +17,6 @@ typedef struct {
     http_version_t http_version;
 } http_req_t;
 
+int validate_request(char *data_received, size_t data_length);
 
 #endif
