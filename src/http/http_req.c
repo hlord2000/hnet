@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <util.h>
+
 #include <http.h>
 #include <http_req.h>
 
@@ -66,59 +68,34 @@ static int validate_version(char *http_version, size_t data_length) {
 }
 
 static int validate_request_line(char *request_line, size_t data_length, http_req_t *http_req) {
-    if (request_line == NULL) {
+    if (request_line == NULL || http_req == NULL) {
         return -1;
-    }
+    } 
 
-    if (data_length == 0) { return -1;
+    if (data_length == 0) {
+        return -1;
     }
     
-    char *request_line_ptr;
-    char *method = strtok_r(request_line, " ", &request_line_ptr);
-    
-    if (method == NULL) {
-        return -1;
-    }
-    http_req_method_t req_method = validate_method(method, strlen(method));
-
-    if (req_method == NONE) {
-        return -1;
-    }
-    else {
-        http_req->request_method = req_method;
-    }
-    
-    char *path = strtok_r(NULL, " ", &request_line_ptr);
-
-    if (path == NULL) {
+    tokens_t request_line_tokens = str2tok(request_line, " ");
+    if (request_line_tokens.num_tokens != 3) {
         return -1;
     }
 
-    if (validate_path(path, strlen(path))) {
-        return -1;
-    }
-    else {
-        server_path_t *server_path = malloc(sizeof(server_path_t));
-
-        server_path->path = path;
-        server_path->path_length = strlen(path);
-
-        http_req->server_path = *server_path;
-    }
-
-    char *http_version = strtok_r(NULL, " ", &request_line_ptr);
-
-    if (http_version == NULL) {
+    http_req->request_method = validate_method(request_line_tokens.tokens[0], strlen(request_line_tokens.tokens[0]));
+    if (http_req->request_method == NONE) {
         return -1;
     }
 
-    if (validate_version(http_version, strlen(http_version))) {
+    if (validate_path(request_line_tokens.tokens[1], strlen(request_line_tokens.tokens[1]))) {
         return -1;
     }
-    else {
-        http_req->http_version = HTTP_ONE_POINT_ONE;
-    }
+    http_req->server_path.path = request_line_tokens.tokens[1];
+    http_req->server_path.path_length = strlen(request_line_tokens.tokens[1]);
 
+    http_req->http_version = validate_version(request_line_tokens.tokens[2], strlen(request_line_tokens.tokens[2]));
+    if (http_req->http_version == -1) {
+        return -1;
+    }
     return 0;
 }
 
@@ -136,7 +113,6 @@ static int validate_headers(char *request_line, size_t data_length, http_req_t *
         return -1;
     }
     memset(request_line_end, '\0', 2);
-
 }
 
 
@@ -152,30 +128,18 @@ http_req_t * validate_request(char *data_received, size_t data_length) {
         return NULL;
     }
    
-    char *request_header_end = strstr(data_received, "\r\n\r\n"); 
-    if (request_header_end == NULL) {
-        return NULL;
-    }
-    memset(request_header_end, '\0', 4);
-    char *request_body = request_header_end + 4;
-    
     http_req_t *http_req = malloc(sizeof(http_req_t)); 
+    
+    tokens_t request_tokens = str2tok(data_received, "\r\n\r\n");
 
-    err = validate_request_line(data_received, data_length, http_req);
+    char *header = request_tokens.tokens[0];
+    
+    tokens_t header_tokens = str2tok(header, "\r\n");
+
+    err = validate_request_line(header_tokens.tokens[0], strlen(header_tokens.tokens[0]), http_req);
     if (err) {
         return NULL;
     }
-
-    err = validate_headers(data_received, data_length, http_req);
-    if (err) {
-        return NULL;
-    }
-
-    err = validate_body(data_received, data_length, http_req);
-    if (err) {
-        return NULL;
-    }
-#endif
     
     return http_req;
 };
