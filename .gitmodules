@@ -1,0 +1,3 @@
+[submodule "lib/hstr"]
+	path = lib/hstr
+	url = https://github.com/hlord2000/hstr

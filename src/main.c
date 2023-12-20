@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> #include <http_req.h>
+#include <unistd.h> 
+#include <http_req.h>
 #include <util.h>
 #include <arpa/inet.h>
+
+#include <string.h>
 
 #define PORT 80
 
@@ -45,7 +48,11 @@ int main(void) {
 
     char buffer[1024] = {0};
     recv(new_socket, buffer, 1024, 0);
-    printf("%s\n", buffer);
     http_req_t *req = validate_request(buffer, strlen(buffer));
+    if (req == NULL) {
+        printf("Invalid request\n");
+        return -1;
+    }
+    printf("Request validated\n");
     return 0;
 }
