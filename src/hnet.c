@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> 
-#include <http_req.h>
-#include <util.h>
+#include <http/http_req.h>
 #include <arpa/inet.h>
 
-#include <string.h>
+#include <hstr.h>
 
 #define PORT 80
 
@@ -45,14 +44,12 @@ int main(void) {
     }
 
     printf("Connection accepted\n");
-
-    char buffer[1024] = {0};
-    recv(new_socket, buffer, 1024, 0);
-    http_req_t *req = validate_request(buffer, strlen(buffer));
-    if (req == NULL) {
-        printf("Invalid request\n");
-        return -1;
-    }
+    
+    char buffer[8192] = {0};
+    size_t message_len = recv(new_socket, buffer, 8192, 0);
+    str_t * received_request = hstr(buffer, message_len);
+    PRINT_HSTR(received_request);
+    printf("Length: %zu\n", message_len);
     printf("Request validated\n");
     return 0;
 }

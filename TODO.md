@@ -1,2 +1,0 @@
-- Parsing implementation must also parse headers and body data from POST request.
-- MVP of responding to GET request for localhost/index.html or similar
