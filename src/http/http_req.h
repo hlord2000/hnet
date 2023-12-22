@@ -10,6 +10,7 @@ typedef enum {
     PUT,
     DELETE,
     NONE,
+    INVALID,
 } http_req_method_t;
 
 typedef enum {
@@ -21,15 +22,15 @@ typedef enum {
 } http_ret_code_t;
 
 typedef struct {
-    http_req_method_t request_method;
+    http_req_method_t method;
 
     server_path_t server_path;
 
-    char **headers;
+    str_t **headers;
 
-    char *body;
+    str_t * body;
 } http_req_t;
 
-http_req_t * validate_request(char *data_received, size_t data_length);
+int validate_request(str_t * data_received, http_req_t * http_req);
 
 #endif

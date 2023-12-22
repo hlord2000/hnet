@@ -48,8 +48,13 @@ int main(void) {
     char buffer[8192] = {0};
     size_t message_len = recv(new_socket, buffer, 8192, 0);
     str_t * received_request = hstr(buffer, message_len);
-    PRINT_HSTR(received_request);
-    printf("Length: %zu\n", message_len);
+    print_hstr(received_request);
+
+    http_req_t * http_req;
+    validate_request(received_request, http_req);
     printf("Request validated\n");
+    
+    // close socket
+    close(new_socket);
     return 0;
 }
